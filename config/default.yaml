@@ -1,0 +1,93 @@
+# Default runtime configuration for fetchbot.
+# The PyBullet backend is the working implementation; its defaults live in the
+# classes (EpisodeConfig, GridNavigator, ...) and the values below document them.
+# The Isaac Sim / ROS 2 section is kept for the alternate (GPU) backend.
+
+backend: pybullet              # pybullet | isaac_sim (stub)
+
+pybullet:
+  control_hz: 20               # fixed control-loop tick (sim time)
+  physics_hz: 240              # physics substeps per second
+  renderer: ER_TINY_RENDERER   # CPU renderer, works headless without a GPU
+  arena_size_m: [15.0, 12.0]   # 1.5x the original 10 x 8 m layout (see randomizer.S)
+  robot:                       # HuskyRobot: pybullet_data husky/husky.urdf, 4 wheel motors
+    urdf: husky/husky.urdf
+    footprint_m: [1.01, 0.69]  # URDF collision box + wheels (data sheet: 0.99 x 0.67 x 0.39)
+    footprint_radius_m: 0.61   # circumscribed radius
+    wheel_radius_m: 0.17775    # URDF
+    track_m: 0.5708            # URDF wheel joint separation
+    wheel_separation_multiplier: 1.875   # husky_control control.yaml (skid steer)
+    max_linear_mps: 1.0        # Clearpath data sheet
+    max_angular_radps: 2.0     # husky_control control.yaml
+    max_lin_acc_mps2: 3.0      # husky_control control.yaml
+    max_ang_acc_radps2: 6.0    # husky_control control.yaml
+    deck_height_m: 0.404       # deck surface; carried objects ride on it (top_plate_link)
+  lidar: {beams: 360, max_range_m: 6.0, height_m: 0.10, rate_hz: 10}   # low ring: sees the objects
+  camera: {width: 160, height: 120, fov_deg: 60, pitch_deg: -25, rate_hz: 5,
+           mount_m: [0.30, 0.0, 0.70]}
+  grid_resolution_m: 0.1
+  lethal_radius_m: 0.40        # Husky half-width + 0.05 m
+  inflation_radius_m: 0.91     # Husky footprint radius + 0.3 m
+  attach_distance_m: 0.625     # contact sensor: object center within front bumper + 0.12 m
+  max_sim_time_s: 450          # 1.5 x 300 s for the 1.5x arena (step_limit: 3600 ticks)
+  video: {size: [1280, 480], every_n_ticks: 2, fps: 20}   # 2x speed playback
+
+# Isaac Sim / ROS 2 backend settings (alternate backend; stub only, not used by the PyBullet path).
+robot:
+  type: nova_carter            # Isaac Sim backend robot
+  # Phase 1 uses NVIDIA's ROS-ready USD asset (Isaac Sim 6.0.1 docs path):
+  #   /Isaac/Samples/ROS2/Robots/Nova_Carter_ROS.usd
+  usd_asset: /Isaac/Samples/ROS2/Robots/Nova_Carter_ROS.usd
+  urdf: TODO                   # official URDF: ros-humble-nova-carter-description (Linux/Humble only)
+  base_frame: base_link
+  map_frame: map
+  odom_frame: odom
+
+sensors:
+  # Topic names verified against NVIDIA's carter_navigation package
+  # (IsaacSim-ros_workspaces jazzy_ws: launch/carter_navigation.launch.xml and
+  # params/carter_navigation_params.yaml).
+  lidar_topic: /front_3d_lidar/lidar_points   # 3D RTX lidar point cloud (sim)
+  scan_topic: /scan                           # from pointcloud_to_laserscan in the Nav2 launch
+  odom_topic: /chassis/odom                   # Nav2 odom_topic in carter params
+  cmd_vel_topic: /cmd_vel                     # Nav2 collision_monitor output
+  # TODO: verify Hawk camera topic names; camera publishers are partly disabled by default.
+  camera_topic: TODO
+  depth_topic: TODO
+
+mapping:
+  slam: slam_toolbox           # Isaac Sim backend; PyBullet uses known-pose occupancy mapping
+  semantic_resolution_m: 0.05
+  frontier_min_size_cells: 4
+
+perception:
+  detector: color              # color (PyBullet) | open_vocab (Isaac Sim, TODO)
+  model: TODO                  # e.g. OWL-ViT, Grounding DINO, or an NVIDIA NIM endpoint
+  score_threshold: 0.3
+
+navigation:
+  backend: grid                # grid (A* + pure pursuit)
+  goal_tolerance_m: 0.25
+  approach_distance_m: 0.6    # object center to Husky center (bumper ~3 cm away)
+
+tasks:
+  attach_distance_m: 0.625     # attach-on-contact grab threshold (center distance)
+  explore_timeout_s: 300
+
+language:
+  parser: rule_based           # rule_based | llm (falls back to rule_based)
+  llm_endpoint: TODO
+
+world:
+  dynamic_actors: true
+  num_people: 1
+  relocate_objects: false
+
+evaluation:
+  episodes: 20
+  seed: 0
+  output_dir: outputs/
+  record_video: false
+
+ui:
+  mode: cli                    # cli | gui (stub)

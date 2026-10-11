@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ROS 2 / colcon
+install/
+log/
+build/
+
+# Outputs and local models
+outputs/
+models/
+*.gguf
+runs/
+*.mp4
+*.bag
+*.db3
+*.pgm
+*.usd.bak
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

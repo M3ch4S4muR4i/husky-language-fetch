@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fetchbot"
+version = "0.1.0"
+description = "Language-commanded fetch robot in PyBullet: a local LLM parses commands into multi-step task programs; lidar mapping, frontier exploration, A* navigation, color + shape detection and a fetch state machine (MTRE 6100 course project, Kennesaw State University)."
+readme = "README.md"
+requires-python = ">=3.10"  # tested with Python 3.12 + PyBullet 3.2.5
+authors = [{ name = "Sam Carter" }]
+# Tested with: numpy 2.5, pybullet 3.2.5, pillow 12.3, imageio 2.38, imageio-ffmpeg 0.6.
+dependencies = [
+    "numpy",
+    "pybullet>=3.2",
+    "pillow>=9",
+    "imageio>=2.20",
+    "imageio-ffmpeg",
+    "pyyaml",
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+llm = ["llama-cpp-python>=0.3"]  # LLMParser (local GGUF model); tested with 0.3.36, pydantic 2.14
+perception = ["torch", "transformers"]  # TODO: OWL-ViT / Grounding DINO or NVIDIA NIM client; versions unverified
+gui = []                                # TODO: choose GUI toolkit (e.g. PySide6 / Dear PyGui)
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+fetchbot = "fetchbot.ui.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["fetchbot*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["B027"]  # optional no-op hooks in abstract base classes are intentional
+
+[tool.ruff.lint.isort]
+known-first-party = ["fetchbot"]
